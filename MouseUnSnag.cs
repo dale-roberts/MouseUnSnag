@@ -364,7 +364,7 @@ public class MouseUnSnag
     private Point LastMouse = new Point (0, 0);
     IntPtr ThisModHandle = IntPtr.Zero;
     int NJumps = 0;
-    private bool wrap = true;
+    private bool nowrap = false;
 
     private IntPtr SetHook (int HookNum, HookProc proc)
     {
@@ -438,7 +438,7 @@ public class MouseUnSnag
         {
             NewCursor = jumpScreen.R.ClosestBoundaryPoint (cursor);
         }
-        else if (wrap && StuckDirection.X != 0)
+        else if (!nowrap && StuckDirection.X != 0)
         {
             NewCursor = WrapPoint (StuckDirection, cursor);
         }
@@ -502,7 +502,7 @@ public class MouseUnSnag
 
     private void Run (string[] args)
     {
-        wrap = args.Contains ("/nowrap");
+        nowrap = args.Contains ("/nowrap");
 
         // DPI Awareness API is not available on older OS's, but they work in
         // physical pixels anyway, so we just ignore if the call fails.
