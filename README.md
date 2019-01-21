@@ -55,7 +55,6 @@ The MouseUnSnag executable takes the following command line options in the forma
 ## Future Directions
 Although I believe this is quite a *useful* program, it is obviously not very "user friendly". It just runs at the command line (you must "minimize" the CMD console window, to get it out of the way), and prints out some debugging information on the console as you move the mouse around. If more than three or four people actually wind up using the program, and there is interest, it may be worth investing some effort towards some improvements, such as:
 * Getting rid of the "command line" interface, and instead have an associated System Tray icon.
-* Allow enabling and disabling of features, in case you don't like the "wrap-around", for instance.
 * Allow more complex options for removing cursor "stickiness" only on particular edges or corners.
 
 ... and so on.
