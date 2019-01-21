@@ -144,10 +144,10 @@ public static class StaticStuff
     // valid pixel.
     public static int OutsideXDistance(Rectangle R, Point P)
         => Math.Max (Math.Min (0, P.X - R.Left), P.X - R.Right + 1);
-        
+
     public static int OutsideYDistance(Rectangle R, Point P)
         => Math.Max (Math.Min (0, P.Y - R.Top), P.Y - R.Bottom + 1);
-        
+
     public static Point OutsideDistance (Rectangle R, Point P)
         => new Point (OutsideXDistance(R,P), OutsideYDistance(R,P));
 
@@ -285,7 +285,7 @@ public class SnagScreen
             $"Topmost({AsString(TopMost)}), Btmost({AsString(BottomMost)})   "+
             $"BoundingBox{BoundingBox}");
     }
-    
+
     // Find which screen the point is on. If it is not on one, return null.
     public static SnagScreen WhichScreen (Point P)
     {
@@ -340,7 +340,7 @@ public class SnagScreen
                 if(dist < DistClosest) {
                     DistClosest = dist;
                     WS = S;
-                }                
+                }
             }
             return WS.R.ClosestBoundaryPoint(new Point(Dir.X==1?WS.R.Left:WS.R.Right, Cursor.Y));
         }
@@ -353,7 +353,7 @@ public class SnagScreen
 
 // =======================================================================================================
 // =======================================================================================================
-// 
+//
 // The MouseUnSnag class deals with the low-level mouse events.
 //
 //
@@ -364,6 +364,11 @@ public class MouseUnSnag
     private Point LastMouse = new Point (0, 0);
     IntPtr ThisModHandle = IntPtr.Zero;
     int NJumps = 0;
+
+    // Command line option flags
+    private bool enableUnstick = true;
+    private bool enableJump = true;
+    private bool enableWrap = true;
 
     private IntPtr SetHook (int HookNum, HookProc proc)
     {
@@ -400,7 +405,7 @@ public class MouseUnSnag
     bool CheckJumpCursor (Point mouse, Point cursor, out Point NewCursor)
     {
         NewCursor = cursor; // Default is to not move cursor.
-			
+
         // Gather pertinent information about cursor, mouse, screens.
         Point Dir = Direction (cursor, mouse);
         SnagScreen cursorScreen = WhichScreen (cursor);
@@ -409,7 +414,7 @@ public class MouseUnSnag
         Point StuckDirection = OutsideDirection (cursorScreen.R, mouse);
 
         string StuckString = IsStuck ? "--STUCK--" : "         ";
-		
+
 //        Console.Write ($" FarOut{StuckDirection}/{OutsideDis//tance(cursorScreen.R, mouse)} " +
 //            $"mouse:{mouse}  cursor:{cursor} (OnMon#{cursorScreen}/{mouseScreen}) last:{LastMouse}  " +
 //            $"#UnSnags {NJumps}   {StuckString}        \r");
@@ -418,7 +423,7 @@ public class MouseUnSnag
             $"cur_mouse:{mouse}  prev_mouse:{LastMouse} ==? cursor:{cursor} (OnMon#{cursorScreen}/{mouseScreen})  " +
             $"#UnSnags {NJumps}   {StuckString}   \r");
 
-		LastMouse = mouse;
+        LastMouse = mouse;
 
         // Let caller know we did NOT jump the cursor.
         if (!IsStuck)
@@ -429,15 +434,15 @@ public class MouseUnSnag
         // If the mouse "location" (which can take on a value beyond the current
         // cursor screen) has a value, then it is "within" another valid screen
         // bounds, so just jump to it!
-        if (mouseScreen != null)
+        if (enableUnstick && mouseScreen != null)
         {
             NewCursor = mouse;
         }
-        else if (jumpScreen != null)
+        else if (enableJump && jumpScreen != null)
         {
             NewCursor = jumpScreen.R.ClosestBoundaryPoint (cursor);
         }
-        else if (StuckDirection.X != 0)
+        else if (enableWrap && StuckDirection.X != 0)
         {
             NewCursor = WrapPoint (StuckDirection, cursor);
         }
@@ -445,7 +450,7 @@ public class MouseUnSnag
             return false;
 
         ++NJumps;
-		Console.Write($"\n -- JUMPED!!! --\n");
+        Console.Write($"\n -- JUMPED!!! --\n");
         return true;
     }
 
@@ -510,6 +515,43 @@ public class MouseUnSnag
         catch (System.DllNotFoundException)
         {
             Console.WriteLine ("No SHCore.DLL. No problem.");
+        }
+
+        // Parse command line arguments
+        foreach (string arg in args)
+        {
+            switch (arg)
+            {
+                case "-s":
+                    enableUnstick = false;
+                    break;
+                case "+s":
+                    enableUnstick = true;
+                    break;
+                case "-j":
+                    enableJump = false;
+                    break;
+                case "+j":
+                    enableJump = true;
+                    break;
+                case "-w":
+                    enableWrap = false;
+                    break;
+                case "+w":
+                    enableWrap = true;
+                    break;
+                default:
+                    string exeName = Environment.GetCommandLineArgs()[0];
+                    Console.WriteLine($"Usage: {exeName} [options ...]");
+                    Console.WriteLine("\t-s    Disables mouse un-sticking.");
+                    Console.WriteLine("\t+s    Enables mouse un-sticking. Default.");
+                    Console.WriteLine("\t-j    Disables mouse jumping.");
+                    Console.WriteLine("\t+j    Enables mouse jumping. Default.");
+                    Console.WriteLine("\t-w    Disables mouse wrapping.");
+                    Console.WriteLine("\t+w    Enables mouse wrapping. Default.");
+                    Environment.Exit(1);
+                    break;
+            }
         }
 
         // Make sure we catch CTRL-C hard-exit of program.

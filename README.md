@@ -22,16 +22,32 @@ The program endeavors to fix two separate problems related to multiple monitors,
 1. Mouse gets stuck on corners. This is an intentional feature of Windows, to keep the mouse from "sliding off" the corner of the monitor when you are trying to get to the task bar at the bottom of the screen. But if you find it annoying rather than helpful, **MouseUnSnag** will fix it for you.
 
    [How to disable sticky corners in Windows 10 - superuser.com](https://superuser.com/questions/947817/how-to-disable-sticky-corners-in-windows-10)
-   
+
    <img src=https://i.stack.imgur.com/RxDz4.png width="400"/>
 
 2. Mouse gets stuck on an edge, where one monitor is taller than the adjacent monitor.
 
    [How to make the mouse wrap from corners when moving between monitors? - superuser.com](https://superuser.com/questions/865469/how-to-make-the-mouse-wrap-from-corners-when-moving-between-monitors)
-   
+
    <img src=https://i.stack.imgur.com/5Rlji.png width="400"/>
 
 3. **MouseUnSnag** also wraps the cursor around from the right edge of the rightmost monitor, to the left edge of the leftmost monitor, and vice versa. (I don't have a fancy graphic for that one!)
+
+## Command Line Options
+
+The MouseUnSnag executable takes the following command line options in the format: `MouseUnSnag.exe [options ...]`. All options are enabled by default.
+
+* `-s`, `+s`
+
+  Disable or enable respectively unsticking the cursor from sticky corners.
+
+* `-j`, `+j`
+
+  Disable or enable respectively jumping the mose from an edge to the ajaccent monitor.
+
+* `-w`, `+w`
+
+  Disable or enable respectively wraping the cursor from one far edge to the other.
 
 ## How does it do it?
 **MouseUnSnag** uses the low-level Win32 WH_MOUSE_LL callback to monitor the user's intended movement of the mouse. It also monitors the current position of the cursor on the screen. When **MouseUnSnag** detects that the mouse has tried to move beyond the edge/corner of the screen, but the cursor was not able to move, then it knows that the cursor is "stuck", and will attempt to sensibly move the cursor to an adjacent monitor, if one exists.
