@@ -324,11 +324,11 @@ public class SnagScreen
     //{
     //}
 
-    // Find the best point to "wrap" around the cursor, either horizontally or
+    // Find the best screen to "wrap" around the cursor, either horizontally or
     // vertically. We consider only the "OuterMost" screens. For instance, if
     // the mouse is moving to the left, we consider only the screens in the
     // RightMost[] array.
-    public static Point WrapPoint(Point Dir, Point Cursor)
+    public static SnagScreen WrapScreen(Point Dir, Point Cursor)
     {
         int DistClosest = int.MaxValue;
         SnagScreen WS = null; // Our "wrap screen".
@@ -342,12 +342,11 @@ public class SnagScreen
                     WS = S;
                 }
             }
-            return WS.R.ClosestBoundaryPoint(new Point(Dir.X==1?WS.R.Left:WS.R.Right, Cursor.Y));
+            return WS;
         }
 
-        // We should never get here, but if we do, just return the current
-        // Cursor location.
-        return Cursor;
+        // We should never get here, but if we do, just return the first screen
+        return All[0];
     }
 }
 
@@ -434,17 +433,32 @@ public class MouseUnSnag
         // If the mouse "location" (which can take on a value beyond the current
         // cursor screen) has a value, then it is "within" another valid screen
         // bounds, so just jump to it!
-        if (enableUnstick && mouseScreen != null)
+        if (mouseScreen != null)
         {
+            if (!enableUnstick)
+                return false;
             NewCursor = mouse;
         }
-        else if (enableJump && jumpScreen != null)
+        else if (jumpScreen != null)
         {
+            if (!enableJump)
+                return false;
             NewCursor = jumpScreen.R.ClosestBoundaryPoint (cursor);
         }
-        else if (enableWrap && StuckDirection.X != 0)
+        else if (StuckDirection.X != 0)
         {
-            NewCursor = WrapPoint (StuckDirection, cursor);
+            if (!enableWrap)
+                return false;
+
+            SnagScreen wrapScreen = WrapScreen (StuckDirection, cursor);
+            Point wrapPoint = new Point(
+                StuckDirection.X==1?wrapScreen.R.Left:wrapScreen.R.Right - 1, cursor.Y);
+
+            // Don't wrap cursor if jumping is disabled and it would need to jump.
+            if (!enableJump && !wrapScreen.R.Contains(wrapPoint))
+                return false;
+
+            NewCursor = wrapScreen.R.ClosestBoundaryPoint(wrapPoint);
         }
         else
             return false;
